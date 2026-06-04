@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Reman — Send Message</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;padding:2rem;background:#f7f7fb}
+    .card{max-width:520px;margin:0 auto;background:#fff;padding:1.25rem;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,0.05)}
+    textarea{width:100%;height:120px;padding:0.5rem;border-radius:6px;border:1px solid #ddd}
+    button{margin-top:0.75rem;padding:0.6rem 1rem;border-radius:6px;border:none;background:#6b46c1;color:#fff}
+    .hint{color:#666;font-size:0.9rem}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Send a message to {{ user.name }}</h2>
+    <div class="hint">You are sending as <strong>Reman</strong>.</div>
+    <textarea id="msg"></textarea>
+    <div style="display:flex;gap:0.5rem;align-items:center">
+      <input type="text" id="sender" value="Reman" style="flex:0 0 140px;padding:0.5rem;border:1px solid #ddd;border-radius:6px;margin-top:0.5rem">
+      <button id="sendBtn">Send</button>
+    </div>
+    <div id="status" style="margin-top:0.75rem;color:#333"></div>
+
+    <hr style="margin:1rem 0;border:none;border-top:1px solid #eee">
+    <h3 style="margin:0 0 0.5rem 0">Conversation</h3>
+    <div id="messages" style="max-height:320px;overflow:auto;background:#fbfbff;padding:0.75rem;border-radius:6px;border:1px solid #f0f0fb"></div>
+  </div>
+
+<script>
+document.getElementById('sendBtn').addEventListener('click', async () => {
+  const text = document.getElementById('msg').value.trim();
+  const sender = document.getElementById('sender').value.trim() || 'Reman';
+  if (!text) { document.getElementById('status').textContent = 'Write something first.'; return; }
+  try {
+    const res = await fetch('/api/send-message', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ sender, message: text })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      document.getElementById('status').textContent = 'Sent ✓';
+      document.getElementById('msg').value = '';
+    } else {
+      document.getElementById('status').textContent = 'Error: ' + (data.error || 'unknown');
+    }
+  } catch (e) { document.getElementById('status').textContent = 'Network error'; }
+});
+
+// Poll messages so Reman can see messages sent by Palvika
+async function loadMessages() {
+  const el = document.getElementById('messages');
+  try {
+    const res = await fetch('/api/messages');
+    if (!res.ok) return;
+    const data = await res.json();
+    el.innerHTML = '';
+    data.forEach(m => {
+      const wrapper = document.createElement('div');
+      wrapper.style.marginBottom = '0.6rem';
+      const who = document.createElement('div');
+      who.style.fontWeight = '600';
+      who.textContent = m.sender;
+      const text = document.createElement('div');
+      text.textContent = m.text;
+      text.style.margin = '0.15rem 0 0.25rem 0';
+      const ts = document.createElement('div');
+      ts.style.fontSize = '0.8rem'; ts.style.color = '#6b6b6b';
+      ts.textContent = new Date(m.ts).toLocaleString();
+      wrapper.appendChild(who);
+      wrapper.appendChild(text);
+      wrapper.appendChild(ts);
+      el.appendChild(wrapper);
+    });
+    el.scrollTop = el.scrollHeight;
+  } catch (e) {
+    // ignore
+  }
+}
+
+loadMessages();
+setInterval(loadMessages, 2000);
+</script>
+</body>
+</html>

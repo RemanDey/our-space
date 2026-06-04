@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Our Space</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&family=Playfair+Display:ital,wght@1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+<div class="toast" id="toast"><span class="toast-icon">✦</span><span id="toast-msg"></span></div>
+
+<!-- LANDING PAGE -->
+<div id="landing" class="layer">
+  <div class="ambient amb1"></div>
+  <div class="ambient amb2"></div>
+  <div class="ambient amb3"></div>
+  <div class="logo-text">Our Space</div>
+  <div class="logo-sub" style="animation-fill-mode:forwards">a universe, just for us</div>
+  <div class="typewriter" style="animation-fill-mode:forwards" id="typewriter"></div>
+  <button class="enter-btn" style="animation-fill-mode:forwards" onclick="enterSpace()">
+    <span class="enter-dot"></span> ENTER OUR SPACE
+  </button>
+  <!-- <div class="scroll-hint" style="animation-fill-mode:forwards">
+    <div class="scroll-line"></div>
+    SCROLL TO EXPLORE
+  </div> -->
+</div>
+
+<!-- NAME SETUP MODAL (replaces auth) -->
+<div class="modal-overlay" id="setupOverlay">
+  <div class="auth-modal">
+    <button class="modal-close" onclick="hideSetupModal()">×</button>
+    <div class="modal-title">Welcome</div>
+    <div class="modal-sub">TELL US WHO YOU ARE</div>
+    <div class="input-wrap">
+      <label>YOUR NAME</label>
+      <input class="auth-input" type="text" placeholder="Palvika" id="nameInput" value="{{ user.name }}">
+    </div>
+    <div class="input-wrap">
+      <label>YOUR BANDAR'S NAME</label>
+      <input class="auth-input" type="text" placeholder="Reman" id="partnerInput" value="{{ user.partner }}">
+    </div>
+    <button class="auth-btn" onclick="saveNames()">✦ ENTER OUR UNIVERSE</button>
+  </div>
+</div>
+
+<!-- OPEN WHEN OVERLAY -->
+<div class="ow-content" id="owContent">
+  <div class="ow-inner">
+    <div class="ow-big-emoji" id="owEmoji"></div>
+    <div class="ow-message" id="owMessage"></div>
+    <button class="ow-close-btn" onclick="closeOWCard()">close with love ✦</button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+  <nav class="nav">
+    <div class="nav-logo">Our <span>Space</span></div>
+    <button id="hamburgerBtn" class="hamburger" aria-label="Open menu" aria-expanded="false" onclick="toggleNav()">
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </button>
+    <div class="nav-links">
+      <div class="nav-link active" onclick="showSection('home')">Home</div>
+      <div class="nav-link" onclick="showSection('ai')">Chat</div>
+      <div class="nav-link" onclick="showSection('memories')">Memories</div>
+      <div class="nav-link" onclick="showSection('openWhen')">Open When</div>
+      <div class="nav-link" onclick="showSection('letters')">Future Letters</div>
+    </div>
+    <div class="nav-right">
+      <div class="status-pulse"></div>
+      <span style="font-size:0.75rem;color:var(--muted)" id="onlineStatus">both online</span>
+      <span class="logout-btn" onclick="goToLanding()">leave</span>
+    </div>
+  </nav>
+
+  <!-- HOME SECTION -->
+  <div id="home" class="section active layer">
+    <div class="dash-home">
+      <div class="greeting" id="greetingText">Good evening ✦</div>
+      <div class="greeting-sub" id="greetingSub">THINKING OF YOU RIGHT NOW</div>
+      <div class="widget-grid">
+        <div class="widget sky">
+          <div class="w-label">DISTANCE BETWEEN YOU</div>
+          <div class="dist-globe">
+            <span class="globe-icon">🌍</span>
+            <div>
+              <div class="dist-num">996 km</div>
+              <div class="w-sub">Lucknow → Kolkata</div>
+            </div>
+          </div>
+        </div>
+        <div class="widget lav">
+          <div class="w-label">CURRENT TIME</div>
+          <div class="w-val" id="localTime">--:--</div>
+          <!-- <div class="w-sub" id="partnerTime">Ur Bandar's time: --:--</div> -->
+        </div>
+        <div class="widget rose">
+          <div class="w-label">DAYS TOGETHER</div>
+          <div class="w-val">292</div>
+          <div class="w-sub">since our first hello ✦</div>
+        </div>
+        <div class="widget gold">
+          <div class="w-label">NEXT MEETING IN</div>
+          <div class="countdown-wrap">
+            <div class="cd-units">
+              <div class="cd-unit"><div class="cd-num" id="cd-days">--</div><div class="cd-lbl">DAYS</div></div>
+              <div class="cd-sep">:</div>
+              <div class="cd-unit"><div class="cd-num" id="cd-hours">--</div><div class="cd-lbl">HRS</div></div>
+              <div class="cd-sep">:</div>
+              <div class="cd-unit"><div class="cd-num" id="cd-mins">--</div><div class="cd-lbl">MIN</div></div>
+              <div class="cd-sep">:</div>
+              <div class="cd-unit"><div class="cd-num" id="cd-secs">--</div><div class="cd-lbl">SEC</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="widget mint">
+          <div class="w-label">My Princess' MOOD TODAY</div>
+          <div class="mood-row">
+            <span class="mood-chip" onclick="selectMood(this)">😊 happy</span>
+            <span class="mood-chip" onclick="selectMood(this)">💭 missing you</span>
+            <span class="mood-chip" onclick="selectMood(this)">📚 studying</span>
+            <span class="mood-chip" onclick="selectMood(this)">🌙 cozy</span>
+            <span class="mood-chip" onclick="selectMood(this)">💙 sad</span>
+          </div>
+        </div>
+        <div class="widget">
+          <div class="w-label">RELATIONSHIP STATS</div>
+          <div class="stats-list">
+            <div class="stat-row"><span class="stat-label">Total messages</span><span class="stat-val">169,976</span></div>
+            <div class="stat-row"><span class="stat-label">Voice notes</span><span class="stat-val">34</span></div>
+            <div class="stat-row"><span class="stat-label">Memories saved</span><span class="stat-val">Infinitee...and more to store</span></div>
+            <div class="stat-row"><span class="stat-label">Longest call</span><span class="stat-val">1hr 37mins</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="ai-msg-box" id="dailyMsg">Loading today's message for you...</div>
+    </div>
+  </div>
+
+  <!-- AI SECTION -->
+  <div id="ai" class="section layer">
+    <div id="ai-section">
+      <div class="chat-header">
+        <div class="chat-avatar">
+          <div class="avatar-ring"></div>
+          💫
+        </div>
+        <div class="chat-name" id="aiPartnerName">{{ user.partner }}</div>
+        <div class="chat-status">● always here for you</div>
+      </div>
+      <div class="mode-chips">
+        <div class="mode-chip active" onclick="setMode(this,'romantic')">💕 romantic</div>
+        <div class="mode-chip" onclick="setMode(this,'comfort')">🤗 comfort</div>
+        <div class="mode-chip" onclick="setMode(this,'playful')">😈 playful</div>
+        <div class="mode-chip" onclick="setMode(this,'study')">📚 study buddy</div>
+        <div class="mode-chip" onclick="setMode(this,'night')">🌙 late night</div>
+      </div>
+      <div class="chat-window" id="chatWindow">
+        <div class="msg ai">
+          <div class="msg-name" id="chatPartnerLabel">{{ user.partner|upper }}</div>
+          Hey {{ user.name }} 🌸 I've been waiting for you. How are you feeling today? Tell me everything...
+        </div>
+      </div>
+      <div class="chat-input-wrap">
+        <textarea class="chat-input" id="chatInput" placeholder="talk to me..." onkeydown="handleChatKey(event)" rows="1"></textarea>
+        <button class="send-btn" onclick="sendMessage()">➤</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEMORIES SECTION -->
+  <div id="memories" class="section layer">
+    <div id="memories-section">
+      <div class="section-title">Our Memories</div>
+      <div class="section-subtitle">A SCRAPBOOK OF US, FOREVER</div>
+      <div class="memory-grid" id="memoryGrid"></div>
+    </div>
+  </div>
+
+  <!-- OPEN WHEN SECTION -->
+  <div id="openWhen" class="section layer">
+    <div id="open-when-section">
+      <div class="section-title">Open When...</div>
+      <div class="section-subtitle">LETTERS WRITTEN WITH LOVE, FOR EVERY MOMENT</div>
+      <div class="open-when-grid" id="owGrid"></div>
+    </div>
+  </div>
+
+  <!-- FUTURE LETTERS SECTION -->
+  <div id="letters" class="section layer">
+    <div id="letters-section">
+      <div class="section-title">Future Letters</div>
+      <div class="section-subtitle">WORDS SEALED UNTIL THE PERFECT MOMENT</div>
+      <div class="letters-grid" id="lettersGrid"></div>
+      <div class="compose-wrap">
+        <div class="compose-title">✍️ Write a future letter</div>
+        <textarea class="compose-input" id="letterText" placeholder="My love, when you read this..."></textarea>
+        <div class="compose-row">
+          <input class="date-input" type="date" id="letterDate">
+          <button class="seal-btn" onclick="sealLetter()">Seal with love 💌</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- User data injected from Flask session -->
+<script>
+  const SERVER_USER = {{ user | tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
