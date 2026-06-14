@@ -1,7 +1,5 @@
 # Our Space — Flask App
 
-A romantic long-distance relationship app converted from a single HTML file to a proper Flask application. Authentication has been removed; the app now uses simple name personalisation via a setup modal.
-
 ## Project Structure
 
 ```
