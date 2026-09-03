@@ -90,6 +90,31 @@ canvas#stars{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointe
 .mood-chip:hover,.mood-chip.sel{border-color:var(--rose);color:var(--rose);background:rgba(244,165,192,0.08)}
 .ai-msg-box{background:linear-gradient(135deg,rgba(244,165,192,0.05),rgba(184,169,245,0.03));border:1px solid rgba(244,165,192,0.15);border-radius:16px;padding:1.5rem;margin-top:1.5rem;font-size:0.88rem;line-height:1.8;color:var(--soft);font-style:italic;position:relative}
 .ai-msg-box::before{content:'"';font-family:'Cormorant Garamond',serif;font-size:3rem;color:var(--rose);opacity:0.3;position:absolute;top:-0.5rem;left:1rem;line-height:1}
+.mini-list,.event-list,.gift-list{display:flex;flex-direction:column;gap:0.75rem;margin-top:1rem}
+.todo-row,.event-item,.gift-item{display:flex;align-items:center;gap:0.7rem;padding:0.7rem 0.8rem;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,0.02)}
+.todo-row.done span{opacity:0.55;text-decoration:line-through}
+.todo-check{display:flex;align-items:center;gap:0.7rem;flex:1;cursor:pointer;color:var(--soft);font-size:0.8rem}
+.todo-check input{accent-color:var(--rose)}
+.event-item{align-items:flex-start}
+.event-date{min-width:52px;padding:0.35rem 0.5rem;border-radius:8px;background:rgba(240,200,122,0.12);color:var(--gold);font-size:0.7rem;letter-spacing:0.08em;text-align:center}
+.event-title{font-size:0.85rem;color:var(--bright);margin-bottom:0.15rem}
+.event-desc{font-size:0.73rem;color:var(--muted);line-height:1.4}
+.gift-item{justify-content:flex-start}
+.gift-emoji{font-size:1.5rem;display:inline-flex;align-items:center;justify-content:center}
+.gift-actions{display:flex;gap:0.6rem;justify-content:center;margin-top:0.8rem;flex-wrap:wrap}
+.gift-btn{width:40px;height:40px;border-radius:50%;border:1px solid rgba(244,165,192,0.35);background:rgba(244,165,192,0.05);cursor:pointer;font-size:1.2rem;transition:all 0.3s}
+.gift-btn:hover{transform:translateY(-1px);box-shadow:var(--glow-rose)}
+.mini-form{display:flex;gap:0.6rem;margin-top:1rem}
+.mini-input{flex:1;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:0.7rem 0.8rem;color:var(--soft);font-size:0.8rem;outline:none}
+.mini-input:focus{border-color:rgba(244,165,192,0.28)}
+.mini-btn{padding:0.7rem 1rem;border-radius:10px;border:1px solid rgba(244,165,192,0.3);background:rgba(244,165,192,0.08);color:var(--rose);cursor:pointer;font-size:0.75rem;letter-spacing:0.08em;transition:all 0.3s}
+.mini-btn:hover{background:rgba(244,165,192,0.15)}
+.full{width:100%;margin-top:0.8rem}
+.game-board{display:grid;grid-template-columns:repeat(3,1fr);gap:0.55rem;margin-top:1rem}
+.cell{aspect-ratio:1;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;color:var(--bright);font-family:'Cormorant Garamond',serif;font-size:2.2rem;cursor:pointer;transition:all 0.2s}
+.cell:hover:not(:disabled){background:rgba(244,165,192,0.05);border-color:rgba(244,165,192,0.35)}
+.cell:disabled{cursor:default;opacity:0.9}
+.game-status{margin-top:0.8rem;font-size:0.75rem;letter-spacing:0.08em;color:var(--muted)}
 .countdown-wrap{margin-top:1.5rem}
 .cd-units{display:flex;gap:1rem;margin-top:0.8rem}
 .cd-unit{text-align:center}

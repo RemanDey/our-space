@@ -6,6 +6,7 @@
 
 // ── User state (seeded from Flask session via SERVER_USER) ──────────────────
 let userData = { ...SERVER_USER };
+const moodOptions = ['😊 happy', '💙 calm', '💭 missing you', '📚 studying', '🌙 cozy', '😌 grateful', '😟 anxious', '😴 tired', '😤 stressed', '💖 loved'];
 
 // ── Stars canvas ─────────────────────────────────────────────────────────────
 const canvas = document.getElementById('stars');
@@ -96,10 +97,15 @@ function initDashboard() {
   setInterval(updateTime, 1000);
   initCountdown();
   setInterval(updateCountdown, 1000);
+  renderMoodOptions();
   fetchMemories();
   fetchOWCards();
   fetchLetters();
+  fetchTodos();
+  fetchEvents();
+  fetchGifts();
   loadDailyMessage();
+  initTicTacToe();
 
   // Start human chat polling
   fetchMessages();
@@ -190,10 +196,129 @@ function toggleNav() {
 }
 
 // ── Mood ──────────────────────────────────────────────────────────────────────
+function renderMoodOptions() {
+  const row = document.getElementById('moodRow');
+  if (!row) return;
+  row.innerHTML = '';
+  moodOptions.forEach(text => {
+    const chip = document.createElement('span');
+    chip.className = 'mood-chip';
+    chip.textContent = text;
+    chip.onclick = () => selectMood(chip);
+    row.appendChild(chip);
+  });
+  const saved = localStorage.getItem('our-space-mood');
+  if (saved) {
+    const chip = [...row.children].find(el => el.textContent.trim() === saved);
+    if (chip) chip.classList.add('sel');
+  }
+}
+
 function selectMood(el) {
   document.querySelectorAll('.mood-chip').forEach(c => c.classList.remove('sel'));
   el.classList.add('sel');
+  localStorage.setItem('our-space-mood', el.textContent.trim());
   showToast('Mood saved: ' + el.textContent.trim());
+}
+
+async function fetchTodos() {
+  const list = document.getElementById('todoList');
+  if (!list) return;
+  try {
+    const res = await fetch('/api/todos');
+    const data = await res.json();
+    list.innerHTML = '';
+    data.forEach(todo => {
+      const row = document.createElement('div');
+      row.className = `todo-row ${todo.done ? 'done' : ''}`;
+      row.innerHTML = `
+        <label class="todo-check">
+          <input type="checkbox" ${todo.done ? 'checked' : ''} onchange="toggleTodo(${todo.id})">
+          <span>${todo.text}</span>
+        </label>`;
+      list.appendChild(row);
+    });
+  } catch (_) { /* silent */ }
+}
+
+async function addTodo() {
+  const input = document.getElementById('todoInput');
+  const text = input.value.trim();
+  if (!text) { showToast('Write a plan first ✨'); return; }
+  try {
+    const res = await fetch('/api/todos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+    });
+    if (res.ok) {
+      input.value = '';
+      fetchTodos();
+      showToast('Shared plan added ✦');
+    }
+  } catch (_) { showToast('Could not save that plan'); }
+}
+
+async function toggleTodo(id) {
+  try {
+    const res = await fetch(`/api/todos/${id}`, { method: 'PATCH' });
+    if (res.ok) {
+      fetchTodos();
+    }
+  } catch (_) { /* silent */ }
+}
+
+async function fetchEvents() {
+  const list = document.getElementById('eventsList');
+  if (!list) return;
+  try {
+    const res = await fetch('/api/events');
+    const data = await res.json();
+    list.innerHTML = '';
+    data.forEach(event => {
+      const item = document.createElement('div');
+      item.className = 'event-item';
+      const date = new Date(event.date + 'T12:00:00');
+      const label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      item.innerHTML = `
+        <div class="event-date">${label}</div>
+        <div>
+          <div class="event-title">${event.title}</div>
+          <div class="event-desc">${event.description}</div>
+        </div>`;
+      list.appendChild(item);
+    });
+  } catch (_) { /* silent */ }
+}
+
+async function fetchGifts() {
+  const list = document.getElementById('giftList');
+  if (!list) return;
+  try {
+    const res = await fetch('/api/gifts');
+    const data = await res.json();
+    list.innerHTML = '';
+    data.slice(0, 4).forEach(gift => {
+      const item = document.createElement('div');
+      item.className = 'gift-item';
+      item.innerHTML = `<span class="gift-emoji">${gift.emoji}</span><span>${gift.message}</span>`;
+      list.appendChild(item);
+    });
+  } catch (_) { /* silent */ }
+}
+
+async function sendGift(emoji, message) {
+  try {
+    const res = await fetch('/api/gifts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ gift: emoji, message }),
+    });
+    if (res.ok) {
+      fetchGifts();
+      showToast(`Gift sent ${emoji} ✨`);
+    }
+  } catch (_) { showToast('Could not send the gift right now'); }
 }
 
 // ── AI Chat ───────────────────────────────────────────────────────────────────
@@ -393,3 +518,58 @@ canvas.addEventListener('click', e => {
     nearStar.r = 3; nearStar.to = 1;
   }
 });
+
+// ── Simple two-player game ────────────────────────────────────────────────────
+let gameState = Array(9).fill('');
+let gameTurn = 'X';
+const winningLines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+
+function initTicTacToe() {
+  gameState = Array(9).fill('');
+  gameTurn = 'X';
+  const cells = document.querySelectorAll('.cell');
+  cells.forEach(cell => {
+    cell.textContent = '';
+    cell.disabled = false;
+    cell.onclick = () => handleCellClick(cell.dataset.index);
+  });
+  const status = document.getElementById('gameStatus');
+  if (status) status.textContent = 'Player X starts';
+}
+
+function handleCellClick(index) {
+  if (gameState[index]) return;
+  gameState[index] = gameTurn;
+  const cell = document.querySelector(`.cell[data-index="${index}"]`);
+  if (cell) {
+    cell.textContent = gameTurn;
+    cell.disabled = true;
+  }
+
+  const winner = checkWinner();
+  if (winner) {
+    const status = document.getElementById('gameStatus');
+    if (status) status.textContent = winner === 'draw' ? 'It\'s a draw ✨' : `Player ${winner} wins!`;
+    document.querySelectorAll('.cell').forEach(c => c.disabled = true);
+    return;
+  }
+
+  gameTurn = gameTurn === 'X' ? 'O' : 'X';
+  const status = document.getElementById('gameStatus');
+  if (status) status.textContent = `Player ${gameTurn}'s turn`;
+}
+
+function checkWinner() {
+  for (const combo of winningLines) {
+    const [a, b, c] = combo;
+    if (gameState[a] && gameState[a] === gameState[b] && gameState[a] === gameState[c]) {
+      return gameState[a];
+    }
+  }
+  if (gameState.every(Boolean)) return 'draw';
+  return null;
+}
+
+function resetGame() {
+  initTicTacToe();
+}

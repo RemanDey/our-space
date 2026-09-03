@@ -122,13 +122,44 @@
         </div>
         <div class="widget mint">
           <div class="w-label">My Princess' MOOD TODAY</div>
-          <div class="mood-row">
-            <span class="mood-chip" onclick="selectMood(this)">😊 happy</span>
-            <span class="mood-chip" onclick="selectMood(this)">💭 missing you</span>
-            <span class="mood-chip" onclick="selectMood(this)">📚 studying</span>
-            <span class="mood-chip" onclick="selectMood(this)">🌙 cozy</span>
-            <span class="mood-chip" onclick="selectMood(this)">💙 sad</span>
+          <div class="mood-row" id="moodRow"></div>
+        </div>
+        <div class="widget sky">
+          <div class="w-label">SHARED TO-DO LIST</div>
+          <div id="todoList" class="mini-list"></div>
+          <div class="mini-form">
+            <input id="todoInput" class="mini-input" type="text" maxlength="80" placeholder="Add a shared plan...">
+            <button class="mini-btn" onclick="addTodo()">Add</button>
           </div>
+        </div>
+        <div class="widget gold">
+          <div class="w-label">UPCOMING MOMENTS</div>
+          <div id="eventsList" class="event-list"></div>
+        </div>
+        <div class="widget rose">
+          <div class="w-label">VIRTUAL GIFTS</div>
+          <div id="giftList" class="gift-list"></div>
+          <div class="gift-actions">
+            <button class="gift-btn" onclick="sendGift('🌹', 'A bouquet for your smile.')">🌹</button>
+            <button class="gift-btn" onclick="sendGift('💌', 'A note full of love.')">💌</button>
+            <button class="gift-btn" onclick="sendGift('🍓', 'A sweet little surprise.')">🍓</button>
+          </div>
+        </div>
+        <div class="widget lav">
+          <div class="w-label">TWO-PLAYER MINI GAME</div>
+          <div class="game-board" id="gameBoard">
+            <button class="cell" data-index="0"></button>
+            <button class="cell" data-index="1"></button>
+            <button class="cell" data-index="2"></button>
+            <button class="cell" data-index="3"></button>
+            <button class="cell" data-index="4"></button>
+            <button class="cell" data-index="5"></button>
+            <button class="cell" data-index="6"></button>
+            <button class="cell" data-index="7"></button>
+            <button class="cell" data-index="8"></button>
+          </div>
+          <div class="game-status" id="gameStatus">Player X starts</div>
+          <button class="mini-btn full" onclick="resetGame()">Reset game</button>
         </div>
         <div class="widget">
           <div class="w-label">RELATIONSHIP STATS</div>

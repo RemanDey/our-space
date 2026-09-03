@@ -37,6 +37,24 @@ open_when_store = [
 # Simple in-memory messages store for human-to-human chat
 messages_store = []
 
+# Shared relationship helpers
+shared_todos = [
+    {"id": 1, "text": "Plan our next date night", "done": False},
+    {"id": 2, "text": "Pick a new memory to save", "done": True},
+]
+
+upcoming_events = [
+    {"title": "Birthday celebration", "date": "2026-10-12", "description": "Cake, flowers, and a long call."},
+    {"title": "Our anniversary", "date": "2026-12-12", "description": "A day to celebrate how far we've come."},
+    {"title": "Holiday visit", "date": "2027-01-03", "description": "The next time we finally meet in person."},
+]
+
+virtual_gifts = [
+    {"id": 1, "emoji": "🌹", "message": "A bouquet of love, ready for your next smile."},
+    {"id": 2, "emoji": "💌", "message": "A handwritten note saying: I am proud of you."},
+    {"id": 3, "emoji": "🍓", "message": "A sweet surprise for your sweetest heart."},
+]
+
 
 # ── Routes ────────────────────────────────────────────────────────────────────
 
@@ -133,6 +151,51 @@ def add_letter():
 
 
 # ── Simple chat storage endpoints (human chat) ──────────────────────────────
+@app.route("/api/todos")
+def get_todos():
+    return jsonify(shared_todos)
+
+
+@app.route("/api/todos", methods=["POST"])
+def add_todo():
+    data = request.get_json() or {}
+    text = (data.get("text") or "").strip()
+    if not text:
+        return jsonify({"ok": False, "error": "No todo text provided"}), 400
+    todo = {"id": len(shared_todos) + 1, "text": text, "done": False}
+    shared_todos.insert(0, todo)
+    return jsonify({"ok": True, "todo": todo})
+
+
+@app.route("/api/todos/<int:todo_id>", methods=["PATCH"])
+def toggle_todo(todo_id):
+    for todo in shared_todos:
+        if todo["id"] == todo_id:
+            todo["done"] = not todo["done"]
+            return jsonify({"ok": True, "todo": todo})
+    return jsonify({"ok": False, "error": "Todo not found"}), 404
+
+
+@app.route("/api/events")
+def get_events():
+    return jsonify(upcoming_events)
+
+
+@app.route("/api/gifts")
+def get_gifts():
+    return jsonify(virtual_gifts)
+
+
+@app.route("/api/gifts", methods=["POST"])
+def add_gift():
+    data = request.get_json() or {}
+    emoji = (data.get("gift") or "💌").strip()
+    message = (data.get("message") or "A little love for your day.").strip()
+    gift = {"id": len(virtual_gifts) + 1, "emoji": emoji, "message": message}
+    virtual_gifts.insert(0, gift)
+    return jsonify({"ok": True, "gift": gift})
+
+
 @app.route("/api/messages")
 def get_messages():
     return jsonify(messages_store)
