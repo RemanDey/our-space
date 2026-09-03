@@ -459,12 +459,22 @@ function renderLetters(letters) {
       <div class="letter-cd">${l.cd}</div>
       <div class="letter-from">${l.from_}</div>
       <div class="letter-hint">${l.hint}</div>`;
-    card.addEventListener('click', () => {
-      if (l.locked) showToast('This letter is sealed with love 🔒 — not yet time...');
-      else showToast('Letter: ' + l.from_ + ' ✦ Opening...');
-    });
+    card.addEventListener('click', () => openLetter(l));
     grid.appendChild(card);
   });
+}
+
+function openLetter(letter) {
+  if (letter.locked) {
+    showToast('This letter is sealed with love 🔒 — not yet time...');
+    return;
+  }
+
+  const message = letter.message || letter.hint || 'A little love, waiting for you.';
+  document.getElementById('owEmoji').textContent = letter.emoji || '💌';
+  document.getElementById('owMessage').textContent = message;
+  document.getElementById('owContent').classList.add('open');
+  showToast('Letter opened ✦');
 }
 
 async function sealLetter() {

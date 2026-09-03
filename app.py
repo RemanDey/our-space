@@ -1,19 +1,78 @@
+import json
+import os
+
 from flask import Flask, render_template, request, jsonify, session
 # import anthropic
-import os
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "love")
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE_DIR, "data")
+LETTERS_FILE = os.path.join(DATA_DIR, "letters.json")
+TODOS_FILE = os.path.join(DATA_DIR, "todos.json")
+
 # Default user data (no auth — just names for personalization)
 DEFAULT_USER = {"name": "Palvika", "partner": "Reman"}
 
+def ensure_data_dir():
+    os.makedirs(DATA_DIR, exist_ok=True)
+
+
+def load_json_file(file_path, default):
+    ensure_data_dir()
+    if not os.path.exists(file_path):
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(default, f, ensure_ascii=False, indent=2)
+        return default
+
+    with open(file_path, "r", encoding="utf-8") as f:
+        loaded = json.load(f)
+    return loaded if loaded is not None else default
+
+
+def save_json_file(file_path, payload):
+    ensure_data_dir()
+    with open(file_path, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
+
+
+def load_letters():
+    ensure_data_dir()
+    if not os.path.exists(LETTERS_FILE):
+        default_letters = [
+            {"locked": True,  "cd": "Unlocks on Janmastami Baby",    "from_": "A surprise for you",  "hint": "Written on a rainy Tuesday hehe...", "emoji": "💌", "message": "Every time the rain gets a little louder, I remember that even the hardest days can still end with us smiling at each other. I hope one day, when you open this, you feel my love waiting for you like a warm blanket."},
+            {"locked": True,  "cd": "Unlocks on our anniversary",  "from_": "Year two letter",      "hint": "If you're reading this...",     "emoji": "📜", "message": "Happy anniversary, my love. Two years and still every day feels like a new beginning with you. You have made my world softer, brighter, and kinder. I am so lucky to love you."},
+            {"locked": False, "cd": "My Apology to U hehe",   "from_": "My Apology to U",      "hint": "I wrote this while I felt i was disturbing you...", "emoji": "🎄", "message": "I am sorry for the times I made you feel unheard or too heavy to carry. You are never a burden to me. Even when my words are clumsy, my love for you is still steady and true."},
+        ]
+        with open(LETTERS_FILE, "w", encoding="utf-8") as f:
+            json.dump(default_letters, f, ensure_ascii=False, indent=2)
+        return default_letters
+
+    with open(LETTERS_FILE, "r", encoding="utf-8") as f:
+        loaded = json.load(f)
+
+    return loaded if isinstance(loaded, list) else []
+
+
+def save_letters():
+    save_json_file(LETTERS_FILE, letters_store)
+
+
+def load_todos():
+    default_todos = [
+        {"id": 1, "text": "Plan our next date night", "done": False},
+        {"id": 2, "text": "Pick a new memory to save", "done": True},
+    ]
+    return load_json_file(TODOS_FILE, default_todos)
+
+
+def save_todos():
+    save_json_file(TODOS_FILE, shared_todos)
+
+
 # In-memory store for letters & mood (replace with a DB for persistence)
-letters_store = [
-    {"locked": True,  "cd": "Unlocks on Janmastami Baby",    "from_": "A surprise for you",  "hint": "Written on a rainy Tuesday hehe...", "emoji": "💌"},
-    {"locked": True,  "cd": "Unlocks on our anniversary",  "from_": "Year two letter",      "hint": "If you're reading this...",     "emoji": "📜"},
-    {"locked": False, "cd": "My Apology to U hehe",   "from_": "My Apology to U",      "hint": "I wrote this while I felt i was disturbing you...", "emoji": "🎄"},
-]
+letters_store = load_letters()
 
 memories_store = [
     {"emoji": "🌅", "color": "rgba(244,165,192,0.15)", "date": "August 16, 2025",    "title": "Our first meet",    "text": "Hum first mile they us din.....near that temple. Haa wo random tha...but that was the most memorable moment in my life....mujhe abhi bhi yaad hain that eyes u made when u asked my name....",                       "tags": ["first", "love", "milestone"]},
@@ -38,10 +97,7 @@ open_when_store = [
 messages_store = []
 
 # Shared relationship helpers
-shared_todos = [
-    {"id": 1, "text": "Plan our next date night", "done": False},
-    {"id": 2, "text": "Pick a new memory to save", "done": True},
-]
+shared_todos = load_todos()
 
 upcoming_events = [
     {"title": "Birthday celebration", "date": "2026-10-12", "description": "Cake, flowers, and a long call."},
@@ -145,8 +201,10 @@ def add_letter():
         "from_":  "A letter for you",
         "hint":   text[:40] + "...",
         "emoji":  "💌",
+        "message": text,
     }
     letters_store.insert(0, letter)
+    save_letters()
     return jsonify({"ok": True, "letter": letter})
 
 
@@ -162,8 +220,10 @@ def add_todo():
     text = (data.get("text") or "").strip()
     if not text:
         return jsonify({"ok": False, "error": "No todo text provided"}), 400
-    todo = {"id": len(shared_todos) + 1, "text": text, "done": False}
+    todo_id = max((todo.get("id", 0) for todo in shared_todos), default=0) + 1
+    todo = {"id": todo_id, "text": text, "done": False}
     shared_todos.insert(0, todo)
+    save_todos()
     return jsonify({"ok": True, "todo": todo})
 
 
@@ -172,6 +232,7 @@ def toggle_todo(todo_id):
     for todo in shared_todos:
         if todo["id"] == todo_id:
             todo["done"] = not todo["done"]
+            save_todos()
             return jsonify({"ok": True, "todo": todo})
     return jsonify({"ok": False, "error": "Todo not found"}), 404
 
